@@ -1,0 +1,97 @@
+---
+# This playbook sets up a developer workstation, presumably mac osx
+
+- name: provision dev workstation
+  hosts: localhost
+  connection: local
+  pre_tasks:
+    - name: tap cask and versions
+      homebrew_tap: tap={{ item }}
+      with_items:
+        - caskroom/cask
+        - caskroom/versions
+      tags: homebrew
+      when: ansible_distribution == 'MacOSX'
+  tasks:
+    - name: install brew-cask for general dev
+      homebrew: name=brew-cask update_homebrew=yes state=latest
+      tags: homebrew
+      when: ansible_distribution == 'MacOSX'
+    - name: install dev apps
+      homebrew: name={{ item }} state=latest
+      with_items:
+        - tree
+        - brew-cask
+        - git
+        - node
+        - watch
+        - nmap
+        - wget
+        - pwgen
+        - cmatrix
+        - go
+        - gradle
+        - maven
+        - pwgen
+        - tmux
+      tags: homebrew
+      when: ansible_distribution == 'MacOSX'
+    - name: install dev brew casks
+      homebrew_cask: name={{ item }}
+      with_items:
+        - google-chrome
+        - sourcetree
+        - firefox
+        - virtualbox
+        - vagrant
+        - vagrant-manager
+        - java
+        - java7
+        - intellij-idea
+        - packer
+      tags: homebrew
+      when: ansible_distribution == 'MacOSX'
+    - name: install aws cli and boto via python pip
+      pip: name={{ item }} state=latest
+      with_items:
+        - awscli
+        - boto
+      tags: aws
+    - name: create initial .gitconfig
+      command: git config --global core.ignorecase false
+               creates=~/.gitconfig
+    - name: get git settings
+      command: git config --global -l
+      register: git_config
+      no_log: true
+      tags: git
+    - name: fix git ignorecase
+      command: git config --global core.ignorecase false
+      when: git_config.stdout.find('core.ignorecase') == -1
+      tags: git
+    - name: speed up jvm exit for maven
+      lineinfile: dest=~/.bash_profile
+                  regexp="^export MAVEN_OPTS"
+                  line='export MAVEN_OPTS="-XX:CICompilerCount=1 -XX:TieredStopAtLevel=1"'
+                  state=present
+                  create=true
+      tags:
+        - maven
+        - bash
+    - name: setup JAVA_HOME for bash
+      lineinfile: dest=~/.bash_profile regexp="^export JAVA_HOME" line="export JAVA_HOME=$(/usr/libexec/java_home)" create=true
+      tags:
+        - java
+        - bash
+      when: ansible_distribution == 'MacOSX'
+    - name: setup AWS CLI completer bash
+      lineinfile: dest=~/.bash_profile regexp="aws_completer" line="complete -C aws_completer aws" create=true
+      tags:
+        - bash
+        - aws
+  post_tasks:
+    - name: cleanup homebrew
+      sudo: no
+      command: brew cleanup
+      tags: homebrew
+      when: ansible_distribution == 'MacOSX'
