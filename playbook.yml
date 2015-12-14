@@ -31,7 +31,8 @@
         - cmatrix
         - go
         - gradle
-        - maven
+#        - maven depends on java
+        - python
         - pwgen
         - tmux
       tags: homebrew
@@ -49,6 +50,10 @@
         - java7
         - intellij-idea
         - packer
+      tags: homebrew
+      when: ansible_distribution == 'MacOSX'
+    - name: install maven (after java)
+      homebrew: name=maven state=latest
       tags: homebrew
       when: ansible_distribution == 'MacOSX'
     - name: install aws cli and boto via python pip
