@@ -21,7 +21,7 @@ echo "Checking if your system is ready to brew..."
 brew doctor
 
 # hack to initialize brew cask
-brew cask doctor || $(brew install caskroom/cask/brew-cask && brew cask install google-chrome && brew cask doctor)
+#brew cask doctor || $(brew install caskroom/cask/brew-cask && brew cask install google-chrome && brew cask doctor)
 
 if test ! $(which ansible); then
   echo "Installing ansible via homebrew..."
@@ -29,6 +29,6 @@ if test ! $(which ansible); then
 fi
 
 #brew cask setup initial
-ansible-playbook -i localhost, playbook.yml --ask-sudo-pass
+ansible-playbook -i localhost, playbook.yml --ask-become-pass
 
 source ~/.bash_profile
